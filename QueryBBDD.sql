@@ -1,180 +1,155 @@
-/***************************************************************************************************/
+use onlinestore;
 
-CREATE TABLE TiposClientes (
-    tipo VARCHAR(255) PRIMARY KEY,
+SHOW TABLES LIKE 'TiposClientes'; /*Para verificar la existencia de una tabla*/
+DROP table IF EXISTS Clientes;  /* Borrar una tabla*/
+DROP table IF EXISTS Tipoclientes;
+DROP table IF EXISTS Pedidos;
+DROP table IF EXISTS Articulos;
+DROP table IF EXISTS detallePedido;
+
+---------------------------------------------------------------------------------------
+CREATE TABLE TipoClientes (
+    tipo VARCHAR(20) PRIMARY KEY,
     cuotaAnual DECIMAL(10, 2),
     descuentoEnvio DECIMAL(4, 2)
 );
+DELETE FROM TipoClientes WHERE tipo = 'Cliente Premiun';
+
+INSERT INTO TipoClientes (tipo, cuotaAnual, descuentoEnvio) VALUES
+    ('Cliente Estandar', 00.00, 00.00),
+    ('Cliente Premiun', 30.00, 06.00);
+select * from TipoClientes;
+--------------------------------------------------------------------------------
 
 CREATE TABLE Clientes (
-    email VARCHAR(255) PRIMARY KEY,
-    nombre VARCHAR(255),
-    domicilio VARCHAR(255),
-    nif VARCHAR(255),
-    tipo VARCHAR(255),
-    FOREIGN KEY (tipo) REFERENCES TiposClientes (tipo)
+	id_cliente INT auto_increment primary KEY, 
+	nif VARCHAR(10) unique,
+    email VARCHAR(25) unique,
+    nombre VARCHAR(20),
+    apellido1 varchar(20),
+    apellido2 varchar(20),
+    domicilio VARCHAR(50),
+    tipo VARCHAR(20),
+    FOREIGN KEY (tipo) REFERENCES TipoClientes (tipo)
 );
+alter table Clientes auto_increment= 1;
+-------------------------------------------------------------------------------------
 
 CREATE TABLE Articulos (
-    codigo VARCHAR(255) PRIMARY KEY,
+    id_codigo int auto_increment PRIMARY KEY,
+    nombre VARCHAR(50) unique,
     descripcion VARCHAR(255),
     precio DECIMAL(10, 2),
     tiempoPreparacion INT,
     gastosEnvio DECIMAL(10, 2)
 );
-
+--------------------------------------------------------------------------------------
 CREATE TABLE Pedidos (
-    numeroPedido INT PRIMARY KEY,
-    emailCliente VARCHAR(255),
-    codigoArticulo VARCHAR(255),
-    cantidad INT,
+    id_numeroPedido INT AUTO_INCREMENT  PRIMARY KEY,
+    id_cliente INT,
     fechaHora DATETIME,
-    enviado BOOLEAN,
-    FOREIGN KEY (emailCliente) REFERENCES Clientes (email),
-    FOREIGN KEY (codigoArticulo) REFERENCES Articulos (codigo)
+    enviado ENUM('si','no'),
+    pagado ENUM('si','no'),
+    FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente)
+);
+alter table Pedidos auto_increment= 1;
+--------------------------------------------------------------------------------------
+
+CREATE TABLE DetallePedido (
+    id_numeroPedido INT,
+    id_codigo int,
+    PRIMARY KEY (id_numeroPedido, id_codigo),
+    cantidad DECIMAL(10, 2),
+    precio DECIMAL(10, 2),
+    FOREIGN KEY (id_numeroPedido) REFERENCES Pedidos(id_numeroPedido),
+    FOREIGN KEY (id_codigo) REFERENCES Articulos(id_codigo)
 );
 
-/*************************************************************************************************/
 
-/*Realizacion de los procedures necesarios*/
+/**********************************Creacion de Procedures **************************/
 
 DROP PROCEDURE IF EXISTS agregarArticulo; /*Para borrar el procedure*/
-drop Procedure if exists agregar_pedido_nuevo_cliente; 
+
 DELIMITER //
+
 CREATE PROCEDURE agregarArticulo(
-IN p_codigo VARCHAR(255),
-IN p_descripcion VARCHAR(255),
-IN p_precio DECIMAL(10, 2),
-IN p_tiempoPreparacion INT,
-IN p_gastosEnvio DECIMAL(10, 2)
+    IN nombre VARCHAR(50),
+    IN p_descripcion VARCHAR(255),
+    IN p_precio DECIMAL(10, 2),
+    IN p_tiempoPreparacion INT,
+    IN p_gastosEnvio DECIMAL(10, 2)
 )
 BEGIN
-INSERT INTO Articulos (codigo, descripcion, precio, tiempoPreparacion, gastosEnvio) 
-    VALUES (p_codigo, p_descripcion, p_precio, p_tiempoPreparacion, p_gastosEnvio);
+    INSERT INTO Articulos (descripcion, precio, tiempoPreparacion, gastosEnvio)
+    VALUES (p_descripcion, p_precio, p_tiempoPreparacion, p_gastosEnvio);
 END //
+
 DELIMITER ;
 
-CALL agregarArticulo('1', 'Libreta', 4.95, 10, 5.95);
+CALL agregarArticulo( 'Libreta Logan', 'Libretas de colores de la marca Logan', 4.95, 10, 5.95);
 SELECT * FROM Articulos;
 
+---------------------------------------------------------------------------------------
+
+
+DELIMITER //
+
+CREATE PROCEDURE eliminarArticulo(
+    IN p_id_codigo INT
+)
+BEGIN
+    -- Eliminar el artículo si existe
+    DELETE FROM Articulos WHERE id_codigo = p_id_codigo;
+END //
+
+DELIMITER ;
+
+call eliminarArticulo(1);
+--------------------------------------------------------------------------------
+
+drop procedure if exists agregarCliente;
 
 DELIMITER //
 CREATE PROCEDURE agregarCliente(
-    IN p_email VARCHAR(255),
-    IN p_nombre VARCHAR(255),
-    IN p_domicilio VARCHAR(255),
-    IN p_nif VARCHAR(20),
-    IN p_tipo VARCHAR(255)
+    IN p_nif VARCHAR(10),
+    IN p_email VARCHAR(25),
+    IN p_nombre VARCHAR(20),
+    IN p_apellido1 varchar(20),
+     IN p_apellido2 varchar(20),
+    IN p_domicilio VARCHAR(50),
+    IN p_tipo VARCHAR(20)
 )
 BEGIN
-    INSERT INTO Clientes (nombre, domicilio, nif, email) 
-    VALUES (p_nombre, p_domicilio, p_nif, p_email);
+    INSERT INTO Clientes (nif, email, nombre, domicilio, tipo)
+    VALUES (p_nif, p_email, p_nombre, p_domicilio, p_tipo);
 END //
-DELIMITER ;
 
-CALL agregarCliente('AnaRam@email.com', 'Ana Ramirez', 'Calle Sacromonte 1', '123456A', 'Cliente Estandar');
-SELECT * FROM Clientes;
-SELECT * FROM Clientes WHERE tipo = 'Estándar';
-SELECT * FROM Clientes WHERE tipo = 'Premium';
-
-
-DELIMITER //
-CREATE PROCEDURE agregarPedido(
-    IN p_numero_pedido INT,
-    IN p_nombre_cliente VARCHAR(255),
-    IN p_domicilio_cliente VARCHAR(255),
-    IN p_nif_cliente VARCHAR(20),
-    IN p_email_cliente VARCHAR(255),
-    IN p_codigo_articulo VARCHAR(255),
-    IN p_cantidad INT,
-    IN fechaHora DATETIME,
-    IN p_enviado BOOLEAN
-)
-BEGIN
-    -- Verificar si el cliente ya existe
-    DECLARE cliente_existente INT;
-    SELECT COUNT(*) INTO cliente_existente FROM Clientes WHERE nif = p_nif_cliente;
-    
-    IF cliente_existente = 0 THEN
-        -- Si el cliente no existe, agregarlo
-        INSERT INTO Clientes (nombre, domicilio, nif, email, tipo) 
-        VALUES (p_nombre_cliente, p_domicilio_cliente, p_nif_cliente, p_email_cliente, 'Estándar');
-    END IF;
-    
-    -- Añadir el pedido
-    INSERT INTO Pedidos (numeroPedido, emailCliente, codigoArticulo, cantidad, fechaHora, enviado) 
-    VALUES (p_numero_pedido, p_email_cliente, p_codigo_articulo, p_cantidad, NOW(), p_enviado);
-END //
 DELIMITER ;
 
 
-CALL agregarPedido(1, 'Ana Ramirez', 'Calle Sacromonte 1', '123456A', 'AnaRam@email.com', '1', 2, NOW(), TRUE);
-CALL agregarPedido(2, 'Ana Ramirez', 'Calle Sacromonte 1', '123456A', 'AnaRam@email.com', '1', 4, NOW(), FALSE);
+CALL agregarCliente('123456 A','anaRam@email.com', 'Ana', 'Ramirez', 'Bolivia', 'Calle Sacromonte 1',  'Cliente Estandar');
+CALL agregarCliente('123456 B','luisBarr@email.com', 'Luis', 'Barrena', 'Conse', 'Calle Buenavista 1',  'Cliente Premiun');
 
 
 SELECT * FROM Clientes;
-SELECT * FROM Pedidos;
+SELECT * FROM Clientes WHERE tipo = 'Cliente Estandar';
+SELECT * FROM Clientes WHERE tipo = 'Cliente Premiun';
 
+-----------------------------------------------------------------------------------
+
+drop procedure if exists eliminarCliente;
 
 DELIMITER //
-CREATE PROCEDURE eliminar_pedido(
-    IN p_numero_pedido INT
-)
+
+CREATE PROCEDURE eliminarCliente(IN p_nif VARCHAR(10))
 BEGIN
-    DELETE FROM Pedidos WHERE numeroPedido = p_numero_pedido AND enviado = 0;
+    DELETE FROM Clientes WHERE nif = p_nif;
 END //
+
 DELIMITER ;
 
-CALL eliminar_pedido(1);
+CALL eliminarCliente("123456 A"); 
+
+--------------------------------------------------------------------------------------
 
 
-DELIMITER //
-CREATE PROCEDURE mostrar_pedidos_enviados(
-    IN p_nif_cliente VARCHAR(20)
-)
-BEGIN
-    SELECT 
-        p.numeroPedido,
-        p.fechaHora,
-        c.nif AS nif_cliente,
-        c.nombre AS nombre_cliente,
-        a.codigo AS codigo_articulo,
-        a.descripcion AS descripcion_articulo,
-        p.cantidad,
-        p.enviado
-    FROM 
-        Pedidos p
-    INNER JOIN Clientes c ON p.emailCliente = c.email
-    INNER JOIN Articulos a ON p.codigoArticulo = a.codigo
-    WHERE 
-        c.nif = p_nif_cliente AND p.enviado = TRUE;
-END //
-
-CALL mostrar_pedidos_enviados('123456A');
-
-
-DELIMITER //
-CREATE PROCEDURE mostrar_pedidos_pendientes(
-    IN p_nif_cliente VARCHAR(20)
-)
-BEGIN
-    SELECT 
-        p.numeroPedido,
-        p.fechaHora,
-        c.nif AS nif_cliente,
-        c.nombre AS nombre_cliente,
-        a.codigo AS codigo_articulo,
-        a.descripcion AS descripcion_articulo,
-        p.cantidad,
-        p.enviado
-    FROM 
-        Pedidos p
-    INNER JOIN Clientes c ON p.emailCliente = c.email
-    INNER JOIN Articulos a ON p.codigoArticulo = a.codigo
-    WHERE 
-        c.nif = p_nif_cliente AND p.enviado = FALSE;
-END //
-DELIMITER ;
-
-
-CALL mostrar_pedidos_pendientes('123456A');
