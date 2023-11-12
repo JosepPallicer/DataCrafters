@@ -48,8 +48,8 @@ CREATE TABLE Pedidos (
     id_numeroPedido INT AUTO_INCREMENT  PRIMARY KEY,
     id_cliente INT,
     fechaHora DATETIME,
-    enviado ENUM('si','no'),
-    pagado ENUM('si','no'),
+    enviado BOOLEAN NOT NULL,
+    pagado BOOLEAN NOT NULL,
     FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente)
 );
 alter table Pedidos auto_increment= 1;
