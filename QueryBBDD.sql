@@ -66,7 +66,7 @@ CREATE TABLE DetallePedido (
 );
 
 
-/**********************************Creacion de Procedures **************************/
+/**********************************Propuesta de Creacion de Procedures **************************/
 
 DROP PROCEDURE IF EXISTS agregarArticulo; /*Para borrar el procedure*/
 
