@@ -4,7 +4,6 @@ DROP database  onlinestore;
 
 /*******************Creo las tablas de la base de datos********************/
 
-
 use onlinestore;
 
 SHOW TABLES LIKE 'TiposClientes'; /*Para verificar la existencia de una tabla*/
@@ -141,6 +140,7 @@ DELIMITER ;
 call eliminarArticulo(5);
 select *from articulos;
 --------------------------------------------------------------------------------
+drop procedure if exists buscarArticulo;
 DELIMITER //
 
 CREATE PROCEDURE buscarArticulo(
@@ -169,9 +169,8 @@ DELIMITER ;
 
 select * from articulos;
 call buscarArticulo(1);
-----------------------------------------------------------------------
+--------------------------------------------------------------------------------
 drop procedure if exists agregarCliente;
-
 DELIMITER //
 
 CREATE PROCEDURE agregarCliente(
@@ -184,24 +183,33 @@ CREATE PROCEDURE agregarCliente(
     IN p_tipo VARCHAR(20)
 )
 BEGIN
+    DECLARE clienteAgregado BOOLEAN DEFAULT FALSE;
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Error al agregar el cliente';
+        SELECT 'Error al agregar el cliente' AS mensaje; -- Devolver mensaje de error
     END;
 
     START TRANSACTION;
+
     INSERT INTO Clientes (nif, email, nombre, domicilio, tipo, apellido1, apellido2)
     VALUES (p_nif, p_email, p_nombre, p_domicilio, p_tipo, p_apellido1, p_apellido2);
+
+    SET clienteAgregado = TRUE;
+
     COMMIT;
+
+    IF clienteAgregado THEN
+        SELECT 'Cliente creado satisfactoriamente' AS mensaje; -- Devolver mensaje de éxito
+    END IF;
 END //
 
 DELIMITER ;
 
+
+
 CALL agregarCliente('123456 A', 'anaRam@email.com', 'Ana', 'Ramirez', 'Bolivia', 'Calle Sacromonte 1', 'Cliente Estandar');
 CALL agregarCliente('123456 B', 'luisBarr@email.com', 'Luis', 'Barrena', 'Conse', 'Calle Buenavista 1', 'Cliente Premiun');
-
 
 
 SELECT * FROM Clientes;
@@ -212,25 +220,35 @@ ALTER TABLE Clientes AUTO_INCREMENT = 1;
 -----------------------------------------------------------------------------------
 
 drop procedure if exists eliminarCliente;
-
 DELIMITER //
 
-CREATE PROCEDURE eliminarCliente(IN p_nif VARCHAR(10))
+CREATE PROCEDURE eliminarCliente(
+    IN p_nif VARCHAR(10),
+    OUT p_mensaje VARCHAR(255)
+)
 BEGIN
+    DECLARE clienteEliminado BOOLEAN DEFAULT FALSE;
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Error al eliminar el cliente';
+        SET p_mensaje = 'Error al eliminar el cliente';
     END;
 
     START TRANSACTION;
+
     DELETE FROM Clientes WHERE nif = p_nif;
+
+    SET clienteEliminado = TRUE;
+
     COMMIT;
+
+    IF clienteEliminado THEN
+        SET p_mensaje = 'Cliente eliminado satisfactoriamente';
+    END IF;
 END //
 
 DELIMITER ;
-
 
 CALL eliminarCliente("123456 B"); 
 select * from pedidos;
@@ -254,7 +272,28 @@ END //
 DELIMITER ;
 
 Call mostrarClientes;
------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
+ drop PROCEDURE if exists buscarCliente;
+DELIMITER //
+CREATE PROCEDURE buscarCliente(
+    IN p_nif VARCHAR(10)
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error al buscar el cliente';
+    END;
+
+    START TRANSACTION;
+    SELECT * FROM Clientes WHERE nif = p_nif;
+    COMMIT;
+END //
+DELIMITER //
+
+CALL buscarCliente('123456 A');
+----------------------------------------------------------------------------------------
 drop procedure if exists crearPedido;
 
 DELIMITER //
@@ -360,7 +399,8 @@ END //
 DELIMITER ;
 
 CALL mostrarPedidos();
------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------
 DELIMITER //
 
 CREATE PROCEDURE mostrarPedidosEnviados()
@@ -401,4 +441,5 @@ DELIMITER ;
 
 CALL mostrarPedidosEnviados;
 ---------------------------------------------------------------------------------------------------
+
 
