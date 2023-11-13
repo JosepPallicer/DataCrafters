@@ -141,7 +141,35 @@ DELIMITER ;
 call eliminarArticulo(5);
 select *from articulos;
 --------------------------------------------------------------------------------
+DELIMITER //
 
+CREATE PROCEDURE buscarArticulo(
+    IN p_id_codigo INT
+)
+BEGIN
+    DECLARE error_msg VARCHAR(255);
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        GET DIAGNOSTICS CONDITION 1 error_msg = MESSAGE_TEXT;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error al buscar el artículo: ';
+    END;
+
+    START TRANSACTION;
+
+    SELECT * FROM Articulos WHERE id_codigo = p_id_codigo;
+
+    COMMIT;
+
+END //
+
+DELIMITER ;
+
+
+select * from articulos;
+call buscarArticulo(1);
+----------------------------------------------------------------------
 drop procedure if exists agregarCliente;
 
 DELIMITER //
