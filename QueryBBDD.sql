@@ -323,6 +323,18 @@ select * from pedidos;
 --------------------------------------------------------------------------------------------------------
 DELIMITER //
 
+CREATE PROCEDURE mostrarPedidos()
+BEGIN
+    -- Mostrar todos los pedidos (enviados y no enviados)
+    SELECT * FROM Pedidos;
+END //
+
+DELIMITER ;
+
+CALL mostrarPedidos();
+-----------------------------------------------------------------------------------------------------------
+DELIMITER //
+
 CREATE PROCEDURE mostrarPedidosEnviados()
 BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
