@@ -1,5 +1,5 @@
 /***************************************************************************************************/
-
+Modificacion 
 CREATE TABLE TiposClientes (
     tipo VARCHAR(255) PRIMARY KEY,
     cuotaAnual DECIMAL(10, 2),
