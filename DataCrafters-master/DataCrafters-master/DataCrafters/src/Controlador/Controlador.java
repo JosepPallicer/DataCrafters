@@ -5,43 +5,36 @@ import Modelo.*;
 import java.sql.*;
 
 
-public class Controlador {
 
+public class Controlador implements AutoCloseable{
 
-    private static final String URL = "jdbc:mysql://localhost:3306/onlinestore";
-    private static final String USUARIO = "root";
-    private static final String CONTRASENA = "1983";
     private Connection connection;
 
     public Controlador() {
         try {
-            // Establecer la conexión al iniciar el controlador
-            connection = DriverManager.getConnection(URL, USUARIO, CONTRASENA);
-            System.out.println(("Conectado correctamente con la base de datos"));
+            // Establezco la conexión al iniciar el controlador
+            connection = Utilidades.obtenerConexion();
+            System.out.println("Conectado correctamente con la base de datos");
         } catch (SQLException e) {
             System.out.println("Error al conectar con la base de datos");
             e.printStackTrace();
-
         }
     }
-
-    // Método para cerrar la conexión al finalizar la aplicación
-    public void cerrarConexion() throws SQLException {
+    public void close() {
         try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-                System.out.println("La Base de datos se ha cerrado adecuadamente");
-            }
+            Utilidades.cerrarConexion(connection);
+            System.out.println("La base de datos se ha cerrado adecuadamente");
         } catch (SQLException e) {
             System.err.println("Error al cerrar la base de datos: " + e.getMessage());
-            throw e; // Arroja la excepción para que el controlador superior pueda manejarla
+            e.printStackTrace();
         }
     }
+
 
     // Método para agregar un artículo
     public void agregarArticulo(String nombre, String descripcion, double precio, int tiempoPreparacion, double gastosEnvio) {
-        try {
-            CallableStatement statement = connection.prepareCall("{CALL agregarArticulo(?, ?, ?, ?, ?)}");
+        String sql = "{CALL agregarArticulo(?, ?, ?, ?, ?)}";
+        try (CallableStatement statement = connection.prepareCall(sql)) {
             statement.setString(1, nombre);
             statement.setString(2, descripcion);
             statement.setDouble(3, precio);
@@ -49,29 +42,28 @@ public class Controlador {
             statement.setDouble(5, gastosEnvio);
 
             statement.execute();
-            statement.close();
+            System.out.println("Articulo creado satisfactoriamente");
         } catch (SQLException e) {
             System.err.println("Error al agregar el artículo: " + e.getMessage());
             e.printStackTrace();
         }
     }
-
     // Método para eliminar un artículo
     public void eliminarArticulo(int idCodigo) {
-        try {
-            CallableStatement statement = connection.prepareCall("{CALL eliminarArticulo(?)}");
+        String sql = "{CALL eliminarArticulo(?)}";
+        try (CallableStatement statement = connection.prepareCall(sql)) {
             statement.setInt(1, idCodigo);
-
             statement.execute();
-            statement.close();
+            System.out.println("Articulo eliminado satisfactoriamente");
         } catch (SQLException e) {
             System.err.println("Error al eliminar el artículo: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
+
     // Método para mostrar todos los artículos
-    public void mostrarArticulos() {
+    public boolean mostrarArticulos() {
         try {
             CallableStatement statement = connection.prepareCall("{CALL mostrarArticulos()}");
             ResultSet resultSet = statement.executeQuery();
@@ -91,6 +83,7 @@ public class Controlador {
             System.err.println("Error al mostrar los artículos: " + e.getMessage());
             e.printStackTrace();
         }
+        return false;
     }
 
     public Articulo buscarArticulo(int idCodigo) {
@@ -175,21 +168,6 @@ public class Controlador {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        }
-
-        return mensaje;
-    }
-
-
-    // Método para obtener el mensaje del procedimiento almacenado
-    private String obtenerMensaje(CallableStatement stmt) throws SQLException {
-        String mensaje = null;
-
-        // Obtener el resultado de la ejecución del procedimiento almacenado
-        try (ResultSet rs = stmt.getResultSet()) {
-            if (rs.next()) {
-                mensaje = rs.getString("MESSAGE_TEXT");
-            }
         }
 
         return mensaje;
