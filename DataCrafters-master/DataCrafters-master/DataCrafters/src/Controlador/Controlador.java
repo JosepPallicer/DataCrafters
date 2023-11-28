@@ -4,12 +4,19 @@ package Controlador;
 import Modelo.*;
 import java.sql.*;
 
-
+/**
+ * El controlador es el encargado de gestionar la interacción entre la BBDD y contiene
+ * la lógica de negocio que permite la manipulación de los clientes, articulos y pedidos.
+ * Por otro lado, se encarga de la conexión y desconexión con la BBDD.
+ */
 
 public class Controlador implements AutoCloseable{
 
     private Connection connection;
 
+    /**
+     * Constructor del controlador con el que establecemos la conexión con la BBDD
+     */
     public Controlador() {
         try {
             // Establezco la conexión al iniciar el controlador
@@ -20,6 +27,10 @@ public class Controlador implements AutoCloseable{
             e.printStackTrace();
         }
     }
+
+    /**
+     * Método que permite cerrar la conexión con la BBDD.
+     */
     public void close() {
         try {
             Utilidades.cerrarConexion(connection);
@@ -30,9 +41,17 @@ public class Controlador implements AutoCloseable{
         }
     }
 
+    /**
+     * Método para agregar un pedido a la base de datos.
+     *
+     * @param nombre  Nombre del artículo
+     * @param descripcion Descripción del articulo
+     * @param precio  Precio del artículo
+     * @param tiempoPreparacion  Tiempo de preparacion para el artículo
+     * @param gastosEnvio  Gastos de envio del artículo
+     */
 
-    // Método para agregar un artículo
-    public void agregarArticulo(String nombre, String descripcion, double precio, int tiempoPreparacion, double gastosEnvio) {
+   public void agregarArticulo(String nombre, String descripcion, double precio, int tiempoPreparacion, double gastosEnvio) {
         String sql = "{CALL agregarArticulo(?, ?, ?, ?, ?)}";
         try (CallableStatement statement = connection.prepareCall(sql)) {
             statement.setString(1, nombre);
@@ -48,9 +67,15 @@ public class Controlador implements AutoCloseable{
             e.printStackTrace();
         }
     }
-    // Método para eliminar un artículo
+
+    /**
+     * Metodo qie permite eliminar un artículo por el código
+     * @param idCodigo  id del código del artículo que vamos a eliminar
+     */
+
     public void eliminarArticulo(int idCodigo) {
         String sql = "{CALL eliminarArticulo(?)}";
+
         try (CallableStatement statement = connection.prepareCall(sql)) {
             statement.setInt(1, idCodigo);
             statement.execute();
@@ -62,14 +87,21 @@ public class Controlador implements AutoCloseable{
     }
 
 
-    // Método para mostrar todos los artículos
+
+    /**
+     * Método
+     * @return true cuando la operación ha sido correcta, false en el caso contrario
+     */
+
+
     public boolean mostrarArticulos() {
         try {
             CallableStatement statement = connection.prepareCall("{CALL mostrarArticulos()}");
             ResultSet resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
-                System.out.println("Código: " + resultSet.getString("nombre"));
+
+                System.out.println("Articulo: " + resultSet.getString("nombre"));
                 System.out.println("Descripción: " + resultSet.getString("descripcion"));
                 System.out.println("Precio: " + resultSet.getDouble("precio"));
                 System.out.println("Tiempo de preparación: " + resultSet.getInt("tiempoPreparacion"));
@@ -86,31 +118,29 @@ public class Controlador implements AutoCloseable{
         return false;
     }
 
-    public Articulo buscarArticulo(int idCodigo) {
+    /**
+     * Método que busca un articulo por su nombre
+     * @param nombre Nombre del artículo
+     * @return Nos devuelve una instancia de la clase Srticulo  cuando lo encuentra y null en caso contrario
+     */
+    public Articulo buscarArticulo(String nombre) {
         try {
-            // Preparar la llamada al stored procedure
             String sql = "CALL buscarArticulo(?)";
             try (CallableStatement stmt = connection.prepareCall(sql)) {
-                // Establecer los parámetros del stored procedure
-                stmt.setInt(1, idCodigo);
-
-                // Ejecutar el stored procedure
+                stmt.setString(1, nombre);
                 stmt.execute();
 
-                // Obtener el resultado de la búsqueda
                 try (ResultSet rs = stmt.getResultSet()) {
                     if (rs.next()) {
-                        // Mostrar los detalles del artículo encontrado
-                        System.out.println("Código: " + rs.getString("id_codigo"));
+
+                        System.out.println("Artículo: " + rs.getString("nombre"));
                         System.out.println("Descripción: " + rs.getString("descripcion"));
                         System.out.println("Precio: " + rs.getDouble("precio"));
                         System.out.println("Tiempo de Preparación: " + rs.getInt("tiempoPreparacion"));
                         System.out.println("Gastos de Envío: " + rs.getDouble("gastosEnvio"));
                     } else {
-                        System.out.println("No se encontró ningún artículo con ese código.");
+                        System.out.println("Artículo no encontrado, asegúrate de poner correctamente el nombre.");
                     }
-
-
                 }
             }
 
@@ -120,6 +150,18 @@ public class Controlador implements AutoCloseable{
         return null;
     }
 
+
+    /**
+     * Método que me permite agregar un cliente a la BBDD
+     * @param p_nif NIF del clinte
+     * @param p_email Email del cliente
+     * @param p_nombre Nombre del cliente
+     * @param p_apellido1 Primer apellido del cliente
+     * @param p_apellido2 Segundo apellido del cliente
+     * @param p_domicilio Domicilio del cliente
+     * @param p_tipo Tipo de cliente, premiun o standar
+     * @return Devuelve un mensaje que me indica si se ha introducido correctamente el cliente o no.
+     */
     public String agregarCliente(String p_nif, String p_email, String p_nombre, String p_apellido1, String p_apellido2, String p_domicilio, String p_tipo) {
         String mensaje = null;
 
@@ -136,10 +178,10 @@ public class Controlador implements AutoCloseable{
                 stmt.setString(6, p_domicilio);
                 stmt.setString(7, p_tipo);
 
-                // Ejecutar el stored procedure
+                // Ejecutao el stored procedure
                 stmt.execute();
 
-                // Obtener el resultado del mensaje
+                // Obtengo el resultado del mensaje
                 try (ResultSet rs = stmt.getResultSet()) {
                     if (rs.next()) {
                         mensaje = rs.getString("mensaje");
@@ -154,6 +196,42 @@ public class Controlador implements AutoCloseable{
         return mensaje;
     }
 
+    /**
+     * Método que muestra a los clientes de la base de datos
+     */
+    public void mostrarClientes() {
+        String sql = "{CALL mostrarClientes()}";
+
+        try (CallableStatement statement = connection.prepareCall(sql)) {
+            // Ejecutar el procedimiento almacenado
+            statement.execute();
+
+            // Obtener el resultado de la consulta
+            try (ResultSet rs = statement.getResultSet()) {
+                System.out.println("Listado de Clientes:");
+                while (rs.next()) {
+                    System.out.println("NIF: " + rs.getString("nif"));
+                    System.out.println("Email: " + rs.getString("email"));
+                    System.out.println("Nombre: " + rs.getString("nombre"));
+                    System.out.println("Primer Apellido: " + rs.getString("apellido1"));
+                    System.out.println("Segundo Apellido: " + rs.getString("apellido2"));
+                    System.out.println("Domicilio: " + rs.getString("domicilio"));
+                    System.out.println("Tipo: " + rs.getString("tipo"));
+                    System.out.println("-----------------------------");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al mostrar clientes: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * Método para eliminar de la BBDD  al cliente a través de su nif
+     * @param nif NIF del cliente
+     * @return Nos devuelve un mensaje con el que podemos saber si se ha eliminado o no al cliente
+     */
     public String eliminarCliente(String nif) {
         String mensaje = null;
 
@@ -173,6 +251,10 @@ public class Controlador implements AutoCloseable{
         return mensaje;
     }
 
+    /**
+     * Método que nos permite buscar un cliente con su NIF en la BBDD
+     * @param nif NIF del cliente
+     */
 
     public void buscarCliente(String nif) {
         try {
@@ -201,6 +283,10 @@ public class Controlador implements AutoCloseable{
         }
     }
 
+    /**
+     * Método con el que se me muestra los pedidos existentes en la BBDD
+     */
+
     public void mostrarPedidos() {
         try {
             CallableStatement statement = connection.prepareCall("{CALL mostrarPedidos()}");
@@ -223,6 +309,10 @@ public class Controlador implements AutoCloseable{
         }
     }
 
+    /**
+     * Método con el que buscar un pedido en concreto, a partir del número pedido
+     * @param numeroPedido Número del pedido que buscamos
+     */
 
     public void buscarPedido(int numeroPedido) {
         try {
@@ -247,6 +337,10 @@ public class Controlador implements AutoCloseable{
         }
     }
 
+    /**
+     * Método para eliminar un pedido de la BBDD
+     * @param numeroPedido Número de pedido que buscamos
+     */
 
     public void eliminarPedido(int numeroPedido) {
         try {
@@ -267,6 +361,10 @@ public class Controlador implements AutoCloseable{
             e.printStackTrace();
         }
     }
+
+    /**
+     * Método que muetra los pedidos enviados de la BBDD
+     */
     public void mostrarPedidosEnviados() {
         try {
             CallableStatement statement = connection.prepareCall("{CALL mostrarPedidosEnviados()}");
@@ -287,6 +385,10 @@ public class Controlador implements AutoCloseable{
             e.printStackTrace();
         }
     }
+
+    /**
+     * Método que muetra los pedidos pendientes de la BBDD
+     */
 
     public void mostrarPedidosPendientes() {
         try {
@@ -309,6 +411,13 @@ public class Controlador implements AutoCloseable{
         }
     }
 
+    /**
+     * Método para agregar un pedido a la BBDD
+     * @param nifCliente Nif del cliente
+     * @param nombreArticulo Nombre del artículo
+     * @param cantidad Cantidad del producto (artículo)
+     * @param enviado Estado en el que se encuentra el pedido
+     */
     public void agregarPedido (String nifCliente, String nombreArticulo, int cantidad, boolean enviado){
         try {
             CallableStatement statement = connection.prepareCall("{CALL crearPedido(?, ?, ?, ?, NOW())}");

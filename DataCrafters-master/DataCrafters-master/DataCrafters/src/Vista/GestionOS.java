@@ -4,15 +4,27 @@ import Controlador.Controlador;
 import Modelo.*;
 
 import java.util.Scanner;
+
+/**
+ * La clase GestionOs es la que representa la interfaz de usuario que permite gestionar la tienda.
+ */
 public class GestionOS {
     private Controlador controlador;
     private Scanner teclado;
 
+    /**
+     *Constructor de la clase GestionOS
+     * @param controlador La instancia del controlador que se utilizará para interactuar con la lógica de negocio.
+     */
     public GestionOS(Controlador controlador) {
         this.controlador = controlador;
         this.teclado = new Scanner(System.in);
     }
 
+    /**
+     * * Método principal que inicia la interfaz de usuario y gestiona las opciones del usuario.
+     *
+     */
     public void inicio() {
         boolean salir = false;
         char opcio;
@@ -41,6 +53,11 @@ public class GestionOS {
             }
         } while (!salir);
     }
+
+    /**
+     * Método para darle al usuario las opciones a elegir
+     * @return La opción que el usuario a introducido
+     */
     char pedirOpcion() {
         String resp;
         System.out.println("Elige una opción (1,2,3 o 0):");
@@ -51,6 +68,9 @@ public class GestionOS {
         return resp.charAt(0);
     }
 
+    /**
+     * Método con el que gestionamos las opciones que tienen están relacionadas con los artículos
+     */
     public void gestionArticulos() {
         boolean salir = false;
         char opcio;
@@ -80,11 +100,11 @@ public class GestionOS {
                     controlador.mostrarArticulos();
                     break;
                 case '3':
-                    System.out.println("Introduce el ID del artículo que quieres buscar:");
-                    int idCodigo = Integer.parseInt(teclado.nextLine());
-                    Articulo articuloEncontrado = controlador.buscarArticulo(idCodigo);
+                    System.out.println("Introduce el nombre del artículo que quieres buscar:");
+                    nombre = teclado.nextLine();
+                    Articulo articuloEncontrado = controlador.buscarArticulo( nombre);
                     if (articuloEncontrado == null) {
-                        System.out.println("El artículo con ID " + idCodigo + " no existe.");
+                        System.out.println("El artículo con nombre: " + nombre + " no existe.");
                     } else {
                         System.out.println(articuloEncontrado);
                     }
@@ -104,6 +124,9 @@ public class GestionOS {
         } while (!salir);
     }
 
+    /**
+     *   * Método con el que gestionamos las opciones que tienen están relacionadas con los clientes
+     */
 
         public void gestionClientes() {
             boolean salir = false;
@@ -111,8 +134,9 @@ public class GestionOS {
             do {
                 System.out.println("¿Qué desea hacer con clientes?");
                 System.out.println("1. Añadir un cliente");
-                System.out.println("2. Eliminar un cliente");
-                System.out.println("3. Buscar un cliente por NIF");
+                System.out.println("2. Mostrar clientes");
+                System.out.println("3. Eliminar un cliente");
+                System.out.println("4. Buscar un cliente por NIF");
                 System.out.println("0. Atrás");
                 opcio = pedirOpcion();
                 switch (opcio) {
@@ -134,11 +158,14 @@ public class GestionOS {
                         controlador.agregarCliente(nif, email, nombre, apellido1, apellido2, domicilio, tipo);
                         break;
                     case '2':
+                        controlador.mostrarClientes();
+                        break;
+                    case '3':
                         System.out.println("Introduce el NIF del cliente a eliminar");
                         nif = teclado.nextLine();
                         controlador.eliminarCliente(nif);
                         break;
-                    case '3':
+                    case '4':
                         System.out.println("Introduce el NIF del cliente a buscar");
                         nif = teclado.nextLine();
                         controlador.buscarCliente(nif);
@@ -150,7 +177,9 @@ public class GestionOS {
         }
 
 
-
+    /**
+     *Método con el que gestionamos las opciones que tienen están relacionadas con los pedidos.
+     */
 
 private void gestionPedidos() {
     boolean salir = false;
@@ -203,13 +232,20 @@ private void gestionPedidos() {
         }
     } while (!salir);
 }
+    /**
+     * Método principal que crea una instancia de la clase Controlador y GestionOS para iniciar la aplicación.
+     *
+     * @param args Argumentos de la línea de comandos.
+     */
 
     public static void main(String[] args) {
         Controlador controlador = new Controlador();
         GestionOS gestionOS = new GestionOS(controlador);
         gestionOS.inicio();
     }
-
+    /**
+     * Método para crear un pedido solicitando la información necesaria del usuario.
+     */
 
     private void crearPedido() {
         System.out.println("Introduce el NIF del cliente: ");
