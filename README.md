@@ -19,13 +19,6 @@ Asegúrate de tener la última versión de la rama master antes de empezar a tra
 git checkout master
 git pull origin master
 ```
-### 3. Crear una Rama de Desarrollo
-Para cualquier nuevo desarrollo en la aplicación, crea una nueva rama de desarrollo desde master. Asegúrate de darle un nombre descriptivo, por ejemplo, dev/nueva-funcionalidad.
-
-```bash
-
-git checkout -b dev/nueva-funcionalidad
-```
 ### 4. Trabajar en tu Desarrollo
 Realiza tus cambios y desarrollos en esta nueva rama. Asegúrate de escribir pruebas unitarias asociadas y verificar que todo funcione correctamente.
 
@@ -41,7 +34,7 @@ Integra cualquier cambio nuevo de master en tu rama de desarrollo antes de final
 
 ```bash
 
-git checkout dev/nueva-funcionalidad
+git checkout -nombredeturama-
 git merge master
 ```
 Resuelve cualquier conflicto si es necesario.
