@@ -19,6 +19,15 @@ public class Pedido {
         this.fechaHora = fechaHora;
         this.enviado = false;
     }
+    // construcctor vacio
+    public Pedido(){
+        this.numeroPedido = 0;
+        this.cliente = null;
+        this.articulo = null;
+        this.cantidad = 0;
+        this.fechaHora = null;
+        this.enviado = false;
+    }
 
     // Getters y Setters
     public int getNumeroPedido() {

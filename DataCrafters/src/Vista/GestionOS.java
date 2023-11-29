@@ -25,15 +25,15 @@ public class GestionOS {
             switch (opcio) {
 
                 case '1':
-                    gestionArticulos();
+                   gestionArticulos();
                     break;
 
                 case '2':
-                    gestionClientes();
+                   gestionClientes();
                     break;
 
                 case '3':
-                    gestionPedidos();
+                  //  gestionPedidos();
                     break;
 
                 case '0':
@@ -51,54 +51,101 @@ public class GestionOS {
         return resp.charAt(0);
     }
 
-    public void gestionArticulos(){
+    public void gestionArticulos() {
         boolean salir = false;
         char opcio;
         do {
             System.out.println("Que desea hacer?");
-            System.out.println("1. Añadir un articulo");
-            System.out.println("2. Mostrar los articulos");
-            System.out.println("3. Buscar articulo");
-            System.out.println("0. Atras");
+            System.out.println("1. Añadir un artículo");
+            System.out.println("2. Mostrar los artículos");
+            System.out.println("3. Buscar artículo");
+            System.out.println("0. Atrás");
             opcio = pedirOpcion();
             switch (opcio) {
                 case '1':
-                    System.out.println("Introduce el codigo del articulo");
-                    String codigo = teclado.nextLine();
-                    System.out.println("Introduce la descripcion del articulo");
+                    System.out.println("Introduce el nombre del artículo");
+                    String nombre = teclado.nextLine();
+                    System.out.println("Introduce la descripción del artículo");
                     String descripcion = teclado.nextLine();
-                    System.out.println("Introduce el precio del articulo");
+                    System.out.println("Introduce el precio del artículo");
                     double precio = Double.parseDouble(teclado.nextLine());
-                    System.out.println("Introduce las horas de preparación del articulo");
+                    System.out.println("Introduce las horas de preparación del artículo");
                     int tiempoPreparacion = Integer.parseInt(teclado.nextLine());
-                    System.out.println("Introduce los gastos de envio del articulo");
+                    System.out.println("Introduce los gastos de envío del artículo");
                     double gastosEnvio = Double.parseDouble(teclado.nextLine());
-                    controlador.crearArticulo(codigo, descripcion, precio, tiempoPreparacion, gastosEnvio);
+                    controlador.agregarArticulo(nombre, descripcion, precio, tiempoPreparacion, gastosEnvio);
                     break;
                 case '2':
                     controlador.mostrarArticulos();
                     break;
                 case '3':
-                    Articulo articuloEncontrado = null;
-                    while (articuloEncontrado == null) {
-                        System.out.println("Introduce el código del artículo que quieres buscar:");
-                        codigo = teclado.nextLine();
-                        articuloEncontrado = controlador.buscarPorCodigo(codigo);
+                    System.out.println("Introduce el ID del artículo que quieres buscar:");
+                    int idCodigo = Integer.parseInt(teclado.nextLine());
+                    Articulo articuloEncontrado = controlador.buscarArticulo(idCodigo);
 
-                        if (articuloEncontrado == null) {
-                            System.out.println("El articulo " + codigo + " no existe. Ingresa otro código.");
-                        } else {
-                            System.out.println(articuloEncontrado);
-                        }
+                    if (articuloEncontrado == null) {
+                        System.out.println("El artículo con ID " + idCodigo + " no existe.");
+                    } else {
+                        System.out.println(articuloEncontrado);
                     }
                     break;
-
                 case '0':
                     salir = true;
+                    break;
+
             }
         } while (!salir);
     }
-    public void gestionClientes(){
+
+
+        public void gestionClientes() {
+            boolean salir = false;
+            char opcio;
+            do {
+                System.out.println("¿Qué desea hacer con clientes?");
+                System.out.println("1. Añadir un cliente");
+                System.out.println("2. Eliminar un cliente");
+                System.out.println("3. Buscar un cliente por NIF");
+                System.out.println("0. Atrás");
+                opcio = pedirOpcion();
+                switch (opcio) {
+                    case '1':
+                        System.out.println("Introduce el NIF del cliente");
+                        String nif = teclado.nextLine();
+                        System.out.println("Introduce el email del cliente");
+                        String email = teclado.nextLine();
+                        System.out.println("Introduce el nombre del cliente");
+                        String nombre = teclado.nextLine();
+                        System.out.println("Introduce el primer apellido del cliente");
+                        String apellido1 = teclado.nextLine();
+                        System.out.println("Introduce el segundo apellido del cliente");
+                        String apellido2 = teclado.nextLine();
+                        System.out.println("Introduce el domicilio del cliente");
+                        String domicilio = teclado.nextLine();
+                        System.out.println("Introduce el tipo del cliente");
+                        String tipo = teclado.nextLine();
+                        controlador.agregarCliente(nif, email, nombre, apellido1, apellido2, domicilio, tipo);
+                        break;
+                    case '2':
+                        System.out.println("Introduce el NIF del cliente a eliminar");
+                        nif = teclado.nextLine();
+                        controlador.eliminarCliente(nif);
+                        break;
+                    case '3':
+                        System.out.println("Introduce el NIF del cliente a buscar");
+                        nif = teclado.nextLine();
+                        controlador.buscarCliente(nif);
+                        break;
+                    case '0':
+                        salir = true;
+                }
+            } while (!salir);
+        }
+
+
+}
+
+   /* public void gestionClientes(){
         boolean salir = false;
         char opcio;
         do {
@@ -238,6 +285,6 @@ public class GestionOS {
                     salir = true;
             }
         } while (!salir);
-    }
+    }*/
 
-}
+

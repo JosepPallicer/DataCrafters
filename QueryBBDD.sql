@@ -4,6 +4,8 @@ DROP database  onlinestore;
 
 /*******************Creo las tablas de la base de datos********************/
 
+
+
 use onlinestore;
 
 SHOW TABLES LIKE 'TiposClientes'; /*Para verificar la existencia de una tabla*/
@@ -137,35 +139,22 @@ END //
 DELIMITER ;
 
 
+
+
+
+
+    
+
+
+   
+
+    
+
 call eliminarArticulo(5);
 select *from articulos;
 --------------------------------------------------------------------------------
-drop procedure if exists buscarArticulo;
-DELIMITER //
 
-CREATE PROCEDURE buscarArticulo(
-    IN p_id_codigo INT
-)
-BEGIN
-    DECLARE error_msg VARCHAR(255);
-
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        GET DIAGNOSTICS CONDITION 1 error_msg = MESSAGE_TEXT;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error al buscar el artículo: ';
-    END;
-
-    START TRANSACTION;
-
-    SELECT * FROM Articulos WHERE id_codigo = p_id_codigo;
-
-    COMMIT;
-
-END //
-
-DELIMITER ;
-
+drop procedure if exists agregarCliente;
 
 select * from articulos;
 call buscarArticulo(1);
@@ -183,33 +172,28 @@ CREATE PROCEDURE agregarCliente(
     IN p_tipo VARCHAR(20)
 )
 BEGIN
-    DECLARE clienteAgregado BOOLEAN DEFAULT FALSE;
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
-        SELECT 'Error al agregar el cliente' AS mensaje; -- Devolver mensaje de error
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error al agregar el cliente';
     END;
 
     START TRANSACTION;
-
     INSERT INTO Clientes (nif, email, nombre, domicilio, tipo, apellido1, apellido2)
     VALUES (p_nif, p_email, p_nombre, p_domicilio, p_tipo, p_apellido1, p_apellido2);
-
-    SET clienteAgregado = TRUE;
-
     COMMIT;
 
-    IF clienteAgregado THEN
-        SELECT 'Cliente creado satisfactoriamente' AS mensaje; -- Devolver mensaje de éxito
-    END IF;
+    
 END //
 
 DELIMITER ;
 
-
-
 CALL agregarCliente('123456 A', 'anaRam@email.com', 'Ana', 'Ramirez', 'Bolivia', 'Calle Sacromonte 1', 'Cliente Estandar');
 CALL agregarCliente('123456 B', 'luisBarr@email.com', 'Luis', 'Barrena', 'Conse', 'Calle Buenavista 1', 'Cliente Premiun');
+
+
 
 
 SELECT * FROM Clientes;
@@ -217,10 +201,10 @@ SELECT * FROM Clientes WHERE tipo = 'Cliente Estandar';
 SELECT * FROM Clientes WHERE tipo = 'Cliente Premiun';
 ALTER TABLE Clientes AUTO_INCREMENT = 1;
 
------------------------------------------------------------------------------------
 
 drop procedure if exists eliminarCliente;
 DELIMITER //
+
 
 CREATE PROCEDURE eliminarCliente(
     IN p_nif VARCHAR(10),
@@ -246,9 +230,12 @@ BEGIN
     IF clienteEliminado THEN
         SET p_mensaje = 'Cliente eliminado satisfactoriamente';
     END IF;
+
 END //
 
 DELIMITER ;
+
+
 
 CALL eliminarCliente("123456 B"); 
 select * from pedidos;
@@ -264,10 +251,21 @@ BEGIN
         SET MESSAGE_TEXT = 'Error al mostrar clientes';
     END;
 
+
+
+
     START TRANSACTION;
     SELECT * FROM Clientes;
     COMMIT;
 END //
+
+
+DELIMITER ;
+
+Call mostrarClientes;
+-----------------------------------------------------------------------------------------
+drop procedure if exists crearPedido;
+
 
 DELIMITER ;
 
@@ -275,28 +273,7 @@ Call mostrarClientes;
 ----------------------------------------------------------------------------------------
  drop PROCEDURE if exists buscarCliente;
 DELIMITER //
-CREATE PROCEDURE buscarCliente(
-    IN p_nif VARCHAR(10)
-)
-BEGIN
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Error al buscar el cliente';
-    END;
 
-    START TRANSACTION;
-    SELECT * FROM Clientes WHERE nif = p_nif;
-    COMMIT;
-END //
-DELIMITER //
-
-CALL buscarCliente('123456 A');
-----------------------------------------------------------------------------------------
-drop procedure if exists crearPedido;
-
-DELIMITER //
 
 CREATE PROCEDURE crearPedido(
     IN p_nifCliente VARCHAR(10),
@@ -310,10 +287,17 @@ BEGIN
     DECLARE articuloID INT;
     DECLARE pedidoID INT;
 
+
+CREATE PROCEDURE buscarCliente(
+    IN p_nif VARCHAR(10)
+)
+BEGIN
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
         SIGNAL SQLSTATE '45000'
+
         SET MESSAGE_TEXT = 'Error al crear el pedido';
     END;
 
@@ -350,6 +334,146 @@ BEGIN
 END //
 
 DELIMITER ;
+
+
+        SET MESSAGE_TEXT = 'Error al buscar el cliente';
+    END;
+
+    START TRANSACTION;
+    SELECT * FROM Clientes WHERE nif = p_nif;
+    COMMIT;
+END //
+DELIMITER //
+
+
+CALL buscarCliente('123456 A');
+----------------------------------------------------------------------------------------
+drop procedure if exists crearPedido;
+
+CALL crearPedido('123456 A', 'libreta logan', 2, true, NOW());
+CALL crearPedido('123456 B', 'lapices Decor', 4, false, NOW());
+select * from pedidos;
+--------------------------------------------------------------------------------------------------------
+DELIMITER //
+
+
+CREATE PROCEDURE eliminarPedido(IN p_id_numeroPedido INT)
+BEGIN
+    DECLARE error_msg VARCHAR(255);
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        GET DIAGNOSTICS CONDITION 1 error_msg = MESSAGE_TEXT;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error al eliminar el pedido: ';
+    END;
+
+    START TRANSACTION;
+
+    -- Eliminar detalles del pedido
+    DELETE FROM DetallePedido WHERE id_numeroPedido = p_id_numeroPedido;
+
+    -- Eliminar el pedido
+    DELETE FROM Pedidos WHERE id_numeroPedido = p_id_numeroPedido;
+
+    COMMIT;
+END //
+
+DELIMITER ;
+
+ALTER TABLE pedidos AUTO_INCREMENT = 1;
+CALL eliminarPedido(3);  
+select * from pedidos;
+
+--------------------------------------------------------------------------------------------------------
+DELIMITER //
+
+CREATE PROCEDURE mostrarPedidosEnviados()
+BEGIN
+
+CREATE PROCEDURE crearPedido(
+    IN p_nifCliente VARCHAR(10),
+    IN p_codigoArticulo VARCHAR(50),
+    IN p_cantidad INT,
+    IN p_enviado BOOLEAN,
+    IN p_fechaHora TIMESTAMP
+)
+BEGIN
+    DECLARE clienteID INT;
+    DECLARE articuloID INT;
+    DECLARE pedidoID INT;
+
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000'
+
+        SET MESSAGE_TEXT = 'Error al mostrar pedidos enviados';
+    END;
+
+    START TRANSACTION;
+    SELECT * FROM Pedidos WHERE enviado = TRUE;
+    COMMIT;
+END //
+
+DELIMITER ;
+
+CALL mostrarPedidosEnviados;
+----------------------------------------------------------------------------------------------
+DELIMITER //
+
+CREATE PROCEDURE mostrarPedidosPendientes()
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Error al mostrar pedidos pendientes';
+    END;
+
+    START TRANSACTION;
+    SELECT * FROM Pedidos WHERE enviado = FALSE;
+
+        SET MESSAGE_TEXT = 'Error al crear el pedido';
+    END;
+
+    START TRANSACTION;
+
+    -- Obtener el ID del cliente
+    SELECT id_cliente INTO clienteID FROM Clientes WHERE nif = p_nifCliente;
+
+    -- Verificar si el cliente existe
+    IF clienteID IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cliente no existe';
+    END IF;
+
+    -- Obtener el ID del artículo
+    SELECT id_codigo INTO articuloID FROM Articulos WHERE nombre = p_codigoArticulo;
+
+    -- Verificar si el artículo existe
+    IF articuloID IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Artículo no existe';
+    END IF;
+
+    -- Insertar el nuevo pedido
+    INSERT INTO Pedidos (id_cliente, enviado, pagado, fechaHora)
+    VALUES (clienteID, p_enviado, FALSE, p_fechaHora);
+
+    -- Obtener el ID del nuevo pedido
+    SET pedidoID = LAST_INSERT_ID();
+
+    -- Insertar el detalle del pedido
+    INSERT INTO DetallePedido (id_numeroPedido, id_codigo, cantidad, precio)
+    VALUES (pedidoID, articuloID, p_cantidad, (SELECT precio FROM Articulos WHERE id_codigo = articuloID));
+
+    COMMIT;
+END //
+
+DELIMITER ;
+
+CALL mostrarPedidosEnviados;
+---------------------------------------------------------------------------------------------------
 
 
 
@@ -441,5 +565,7 @@ DELIMITER ;
 
 CALL mostrarPedidosEnviados;
 ---------------------------------------------------------------------------------------------------
+
+
 
 

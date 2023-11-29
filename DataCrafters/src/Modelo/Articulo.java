@@ -7,7 +7,7 @@ public class Articulo {
     private int tiempoPreparacion;
     private double gastosEnvio;
 
-    private ListaArticulos listaArticulos = new ListaArticulos();
+
 
     // Constructor
     public Articulo(String codigo, String descripcion, double precio, int tiempoPreparacion, double gastosEnvio) {
