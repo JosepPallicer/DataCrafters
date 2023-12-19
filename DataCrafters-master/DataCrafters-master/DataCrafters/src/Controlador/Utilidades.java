@@ -9,7 +9,7 @@ public class Utilidades {
 
     private static final String JDBC_URL = "jdbc:mysql://localhost:3306/onlinestore";
     private static final String USERNAME = "root";
-    private static final String PASSWORD = "1983";
+    private static final String PASSWORD = "Ecoquimic1445";
 
     /**
      * Método con el que nos conectamos a la BBDD
