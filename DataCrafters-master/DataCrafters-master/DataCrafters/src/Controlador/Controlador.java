@@ -14,13 +14,16 @@ public class Controlador implements AutoCloseable{
 
     private Connection connection;
 
+    private final SessionFactory sessionFactory;
+
     /**
      * Constructor del controlador con el que establecemos la conexión con la BBDD
      */
-    public Controlador() {
+    public Controlador(SessionFactory sessionFactory) {
         try {
             // Establezco la conexión al iniciar el controlador
             connection = Utilidades.obtenerConexion();
+            this.sessionFactory = sessionFactory;
             System.out.println("Conectado correctamente con la base de datos");
         } catch (SQLException e) {
             System.out.println("Error al conectar con la base de datos");
@@ -95,11 +98,12 @@ public class Controlador implements AutoCloseable{
 
 
     public boolean mostrarArticulos() {
-        try {
-            CallableStatement statement = connection.prepareCall("{CALL mostrarArticulos()}");
-            ResultSet resultSet = statement.executeQuery();
+        try (Session session = sessionFactory.openSession()) {
 
-            while (resultSet.next()) {
+            String hql = "FROM articulos";
+            List<Articulo> articulos = session.createQuery(hql, Articulo.class).list();
+
+            for (Articulo articulo : articulos) {
 
                 System.out.println("Articulo: " + resultSet.getString("nombre"));
                 System.out.println("Descripción: " + resultSet.getString("descripcion"));
@@ -109,9 +113,8 @@ public class Controlador implements AutoCloseable{
                 System.out.println("------------------------");
             }
 
-            resultSet.close();
-            statement.close();
-        } catch (SQLException e) {
+            return true;
+        } catch (Exception e) {
             System.err.println("Error al mostrar los artículos: " + e.getMessage());
             e.printStackTrace();
         }
