@@ -112,6 +112,8 @@ public class Controlador implements AutoCloseable{
                 System.out.println("Gastos de envío: " + resultSet.getDouble("gastosEnvio"));
                 System.out.println("------------------------");
             }
+
+            return true;
         } catch (Exception e) {
             System.err.println("Error al mostrar los artículos: " + e.getMessage());
             e.printStackTrace();
